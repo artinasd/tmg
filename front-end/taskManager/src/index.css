@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@layer base {
+    :root {
+        color-scheme: dark;
+    }
+
+    html {
+        min-width: 320px;
+        background: #111827;
+    }
+
+    body {
+        @apply text-white antialiased;
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        background: #111827;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+        font: inherit;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible {
+        outline: 2px solid #818cf8;
+        outline-offset: 2px;
+    }
+}
+
+@layer utilities {
+    .text2 {
+        color: #8D96A1;
+    }
+    .text3 {
+        color: #C5C9CF;
+    }
+    .bg1 {
+        background-color: #111827;
+    }
+    .bg2 {
+        background-color: #1f2937;
+    }
+    .bg3 {
+        background-color: #14202F;
+    }
+    .link {
+        color: #7689EF;
+    }
+    .textTheme {
+        color: #818cf8;
+    }
+    .theme {
+        background-color: #6366f1;
+    }
+    .themeHover {
+        background-color: #4f46e5;
+    }
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #4b5563 transparent;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 999px;
+}
+
+button,
+[role="button"] {
+    cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+}
