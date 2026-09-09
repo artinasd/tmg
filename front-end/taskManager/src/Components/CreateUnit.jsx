@@ -6,7 +6,7 @@ import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import BusinessIcon from '@mui/icons-material/Business';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
-import { api } from '../services/api.js';
+import { api, ApiError } from '../services/api.js';
 
 function CreateUnit() {
     const { orgCode } = useParams();
@@ -23,14 +23,11 @@ function CreateUnit() {
     const [availableEmployees, setAvailableEmployees] = useState([]);
     const [parentUnits, setParentUnits] = useState([]);
 
-    const isFirstUnit = parentUnits.length === 0;
-
     useEffect(() => {
         let cancelled = false;
         async function loadData() {
             if (!orgCode || !loggedUser?.accessToken) { setLoading(false); return; }
-            setLoading(true);
-            setError('');
+            setLoading(true); setError('');
             try {
                 const [org, employees, units] = await Promise.all([
                     api.get(`/api/orgs/${encodeURIComponent(orgCode)}`),
@@ -44,12 +41,10 @@ function CreateUnit() {
                     return { accountCode: account?.accountCode, accountName: account?.accountName };
                 }).filter(item => item.accountCode);
                 setAvailableEmployees(normalizedEmployees);
-                setParentUnits((Array.isArray(units) ? units : []).filter(unit => unit.unitCode));
+                setParentUnits((Array.isArray(units) ? units : []).filter(unit => unit.unitCode && !unit.isDeleted));
             } catch (err) {
-                if (!cancelled) setError(err.message || 'Failed to load organization data.');
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
+                if (!cancelled) setError(err instanceof ApiError ? err.message : 'Failed to load organization data.');
+            } finally { if (!cancelled) setLoading(false); }
         }
         loadData();
         return () => { cancelled = true; };
@@ -60,7 +55,6 @@ function CreateUnit() {
         setError('');
         const trimmedName = unitName.trim();
         if (!trimmedName) return setError('Unit name is required.');
-        if (!isFirstUnit && !parentUnitCode) return setError('Please select the parent unit.');
         if (!bossCode) return setError('Unit boss is required. Please select an employee.');
 
         const unitPath = trimmedName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -76,38 +70,33 @@ function CreateUnit() {
             });
             navigate(`/home/organizations/${orgCode}`);
         } catch (err) {
-            setError(err.message || 'Failed to create unit.');
-        } finally {
-            setSubmitting(false);
-        }
+            setError(err instanceof ApiError ? err.message : 'Failed to create unit.');
+        } finally { setSubmitting(false); }
     }
 
     if (loading) return <div className="flex justify-center items-center h-64"><div className="text-xl text2">Loading organization...</div></div>;
 
     return (
         <div>
-            <div className="flex items-center gap-4 mb-6">
-                <button onClick={() => navigate(`/home/organizations/${orgCode}`)} className="flex items-center justify-center w-10 h-10 bg2 hover:bg-gray-600 rounded-lg transition" aria-label="Back"><ArrowBackIcon style={{ fontSize: '20px' }} /></button>
-                <div><h2 className="text-2xl font-bold mb-1">Create New Unit</h2><p className="text2">Add a new organizational unit to {organization?.title || 'this organization'}.</p></div>
-            </div>
+            <div className="flex items-center gap-4 mb-6"><button type="button" onClick={() => navigate(`/home/organizations/${orgCode}`)} className="flex items-center justify-center w-10 h-10 bg2 hover:bg-gray-600 rounded-lg transition" aria-label="Back"><ArrowBackIcon style={{ fontSize: '20px' }} /></button><div><h2 className="text-2xl font-bold mb-1">Create New Unit</h2><p className="text2">Add a new organizational unit to {organization?.title || 'this organization'}.</p></div></div>
             {error && <div className="bg-red-900/40 border border-red-700 text-red-200 p-4 rounded-lg mb-4" role="alert">{error}</div>}
 
             <form onSubmit={createUnit} className="rounded-lg bg2 p-6 shadow-lg border border-gray-700/50">
                 <div className="flex items-center gap-3 mb-6"><div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center"><GroupsOutlinedIcon style={{ fontSize: '24px', color: 'white' }} /></div><div><h3 className="text-lg font-semibold text-white">Unit Information</h3><p className="text2 text-sm">Define the basic structure, hierarchy and leadership of this unit.</p></div></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div><label className="text3 font-medium mb-1 text-sm block">Unit Name *</label><Input type="text" value={unitName} onChange={e => setUnitName(e.target.value)} placeholder="Engineering, Marketing..." /></div>
-                    <div><label className="text3 font-medium mb-1 text-sm block">Boss Title</label><Input type="text" value={bossTitle} onChange={e => setBossTitle(e.target.value)} placeholder="Team Lead, Manager..." /></div>
+                    <div><label className="text3 font-medium mb-1 text-sm block" htmlFor="unit-name">Unit Name *</label><Input id="unit-name" type="text" value={unitName} onChange={e => setUnitName(e.target.value)} placeholder="Engineering, Marketing..." /></div>
+                    <div><label className="text3 font-medium mb-1 text-sm block" htmlFor="boss-title">Boss Title</label><Input id="boss-title" type="text" value={bossTitle} onChange={e => setBossTitle(e.target.value)} placeholder="Team Lead, Manager..." /></div>
                     <div className="md:col-span-2">
-                        <label className="text3 font-medium mb-1 text-sm block">Parent Unit {isFirstUnit ? '' : '*'}</label>
-                        <select value={parentUnitCode} onChange={e => setParentUnitCode(e.target.value)} disabled={isFirstUnit} className="border border-gray-600 rounded-lg p-2.5 w-full bg-gray-800 text-white disabled:opacity-60">
-                            <option value="">{isFirstUnit ? 'Not required for the first unit' : 'Select the parent unit...'}</option>
+                        <label className="text3 font-medium mb-1 text-sm block" htmlFor="parent-unit">Parent Unit</label>
+                        <select id="parent-unit" value={parentUnitCode} onChange={e => setParentUnitCode(e.target.value)} className="border border-gray-600 rounded-lg p-2.5 w-full bg-gray-800 text-white">
+                            <option value="">No parent — create as a root unit</option>
                             {parentUnits.map(unit => <option key={unit.unitCode} value={unit.unitCode}>{unit.unitName || unit.name || unit.unitCode}</option>)}
                         </select>
-                        <p className="text2 text-xs mt-1 flex items-center gap-1"><AccountTreeOutlinedIcon style={{ fontSize: '15px' }} /> {isFirstUnit ? 'The first unit in an organization is a root unit and does not require a parent.' : 'Every additional unit must belong to an existing parent unit.'}</p>
+                        <p className="text2 text-xs mt-1 flex items-center gap-1"><AccountTreeOutlinedIcon style={{ fontSize: '15px' }} /> Select an existing unit to create a child; leave it empty for a root unit.</p>
                     </div>
                     <div>
-                        <label className="text3 font-medium mb-1 text-sm block">Unit Boss *</label>
-                        <select value={bossCode} onChange={e => setBossCode(e.target.value)} disabled={availableEmployees.length === 0} className="border border-gray-600 rounded-lg p-2.5 w-full bg-gray-800 text-white disabled:opacity-60">
+                        <label className="text3 font-medium mb-1 text-sm block" htmlFor="unit-boss">Unit Boss *</label>
+                        <select id="unit-boss" value={bossCode} onChange={e => setBossCode(e.target.value)} disabled={availableEmployees.length === 0} className="border border-gray-600 rounded-lg p-2.5 w-full bg-gray-800 text-white disabled:opacity-60">
                             <option value="">{availableEmployees.length ? 'Select a boss...' : 'No employees available'}</option>
                             {availableEmployees.map(emp => <option key={emp.accountCode} value={emp.accountCode}>{emp.accountName || emp.accountCode}</option>)}
                         </select>
@@ -120,13 +109,9 @@ function CreateUnit() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"><div><span className="text-gray-400">Organization:</span><p className="font-medium text-white">{organization?.title || '-'}</p></div><div><span className="text-gray-400">Organization Code:</span><p className="font-medium font-mono text-gray-300">{organization?.orgCode || orgCode}</p></div></div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-8 border-t border-gray-700 pt-6">
-                    <button type="button" onClick={() => navigate(`/home/organizations/${orgCode}`)} disabled={submitting} className="rounded-lg px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white transition disabled:opacity-50">Cancel</button>
-                    <button type="submit" disabled={submitting || !availableEmployees.length} className="rounded-lg px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white transition disabled:opacity-50 disabled:cursor-not-allowed">{submitting ? 'Creating...' : 'Create Unit'}</button>
-                </div>
+                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-8 border-t border-gray-700 pt-6"><button type="button" onClick={() => navigate(`/home/organizations/${orgCode}`)} disabled={submitting} className="rounded-lg px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white transition disabled:opacity-50">Cancel</button><button type="submit" disabled={submitting || !availableEmployees.length} className="rounded-lg px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white transition disabled:opacity-50 disabled:cursor-not-allowed">{submitting ? 'Creating...' : 'Create Unit'}</button></div>
             </form>
         </div>
     );
 }
-
 export default CreateUnit;
