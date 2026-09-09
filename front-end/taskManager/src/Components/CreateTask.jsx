@@ -20,7 +20,7 @@ function CreateTask() {
     const [organizationsLoading, setOrganizationsLoading] = useState(true);
     const [unitsLoading, setUnitsLoading] = useState(false);
     const [employeesLoading, setEmployeesLoading] = useState(false);
-    const [form, setForm] = useState({ title: '', description: '', organizationCode: activeRole?.orgCode || '', unitCode: '', responsibleCode: '', relation: 'new', relatedTaskCode: '', startTime: '', endTime: '', deadline: '', workMinutes: '', priority: '' });
+    const [form, setForm] = useState({ title: '', description: '', organizationCode: activeRole?.organizationCode || '', unitCode: '', responsibleCode: '', relation: 'new', relatedTaskCode: '', startTime: '', endTime: '', deadline: '', workMinutes: '', priority: '' });
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -54,7 +54,7 @@ function CreateTask() {
     useEffect(() => { loadOrganizations(); }, [loadOrganizations]);
     useEffect(() => { if (form.organizationCode) loadUnits(form.organizationCode); else setUnits([]); }, [form.organizationCode, loadUnits]);
     useEffect(() => { if (form.unitCode) loadUnitEmployees(form.unitCode); else setUnitEmployees([]); }, [form.unitCode, loadUnitEmployees]);
-    useEffect(() => { if (activeRole?.orgCode && !form.organizationCode) update('organizationCode', activeRole.orgCode); }, [activeRole?.orgCode, form.organizationCode, update]);
+    useEffect(() => { if (activeRole?.organizationCode && !form.organizationCode) update('organizationCode', activeRole.organizationCode); }, [activeRole?.organizationCode, form.organizationCode, update]);
 
     const employeeOptions = useMemo(() => {
         const seen = new Set();
@@ -69,6 +69,8 @@ function CreateTask() {
         if (form.relation === 'related' && !form.relatedTaskCode.trim()) { setError('Enter the previous task code when attaching this task to an existing task.'); return; }
         setSubmitting(true);
         try {
+            // The backend requires owner in the request, so the frontend derives it from the
+            // authenticated account and never asks the user to select themselves.
             const payload = { title: form.title.trim(), description: form.description.trim() || null, unit: { unitCode: form.unitCode }, owner: { employee: { account: { accountCode } } }, responsible: { employee: { account: { accountCode: form.responsibleCode } } }, startTime: toDateTime(form.startTime), endTime: toDateTime(form.endTime), deadline: toDateTime(form.deadline), workMinutes: form.workMinutes ? Number(form.workMinutes) : null, priority: form.priority.trim() || null };
             if (form.relation === 'related') payload.taskPath = form.relatedTaskCode.trim();
             await api.post('/api/tasks/add', payload);
@@ -80,7 +82,7 @@ function CreateTask() {
     return (
         <div className="w-full">
             <h2 className="text-2xl font-bold mb-1">Create New Task</h2>
-            <p className="text2">New tasks automatically start in <strong>created</strong>. The status changes to <strong>ongoing</strong> only when someone starts working on the task.</p>
+            <p className="text2">New tasks automatically start in <strong>created</strong>. Status is assigned by the backend and is not selected here.</p>
             <form onSubmit={createTask} className="rounded-lg bg2 p-5 mt-5 space-y-5">
                 {error && <div role="alert" className="rounded-md border border-red-500/40 bg-red-500/10 p-3 text-red-300">{error}</div>}
                 {success && <div role="status" className="rounded-md border border-green-500/40 bg-green-500/10 p-3 text-green-300">Task created successfully. Opening your tasks...</div>}
@@ -91,7 +93,7 @@ function CreateTask() {
                     <SelectField id="unit" label="Unit" value={form.unitCode} onChange={value => { update('unitCode', value); update('responsibleCode', ''); }} disabled={!form.organizationCode || unitsLoading} placeholder={unitsLoading ? 'Loading units...' : form.organizationCode ? 'Select a unit' : 'Select an organization first'} options={units.map(unit => ({ value: unit.unitCode, label: unit.unitName || unit.name || unit.unitCode }))} required />
                     <EmployeeSelect id="responsible" label="Responsible" value={form.responsibleCode} onChange={value => update('responsibleCode', value)} employees={employeeOptions} disabled={!form.unitCode || employeesLoading} loading={employeesLoading} placeholder={form.unitCode ? 'Select the responsible employee' : 'Select a unit first'} required />
                     <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/5 p-4"><p className="text-sm font-semibold">Owner</p><p className="text2 text-sm mt-1">{loggedUser?.userInfo?.accountName || loggedUser?.userInfo?.accountID || 'Current account'} — automatically assigned to you.</p>{form.unitCode && !employeesLoading && !ownerEmployment && <p className="text-amber-300 text-xs mt-2">You are not a member of this unit, so it cannot be used for a task you create.</p>}</div>
-                    <div className="md:col-span-2 rounded-lg border border-gray-700 p-4"><p className="text-sm font-semibold mb-3">Task relation</p><div className="flex flex-wrap gap-4"><label className="flex items-center gap-2 text-sm"><input type="radio" name="relation" checked={form.relation === 'new'} onChange={() => update('relation', 'new')} /> New task</label><label className="flex items-center gap-2 text-sm"><input type="radio" name="relation" checked={form.relation === 'related'} onChange={() => update('relation', 'related')} /> Attach to a previous task</label></div>{form.relation === 'related' && <div className="mt-4"><Field id="related-task" label="Previous Task Code" value={form.relatedTaskCode} onChange={value => update('relatedTaskCode', value)} placeholder="e.g. Task_xxx" required /></div>}<p className="text2 text-xs mt-3">The backend represents task hierarchy through <code>taskPath</code>; the previous task code is used as the parent path.</p></div>
+                    <div className="md:col-span-2 rounded-lg border border-gray-700 p-4"><p className="text-sm font-semibold mb-3">Task relation</p><div className="flex flex-wrap gap-4"><label className="flex items-center gap-2 text-sm"><input type="radio" name="relation" checked={form.relation === 'new'} onChange={() => update('relation', 'new')} /> Standalone task</label><label className="flex items-center gap-2 text-sm"><input type="radio" name="relation" checked={form.relation === 'related'} onChange={() => update('relation', 'related')} /> Attached to an existing task</label></div>{form.relation === 'related' && <div className="mt-4"><Field id="related-task" label="Parent Task Code" value={form.relatedTaskCode} onChange={value => update('relatedTaskCode', value)} placeholder="e.g. Task_xxx" required /></div>}<p className="text2 text-xs mt-3">The backend represents task hierarchy with <code>taskPath</code>. When a parent code is supplied, the backend appends the new task code to that path.</p></div>
                     <Field id="priority" label="Priority" value={form.priority} onChange={value => update('priority', value)} placeholder="Optional" />
                     <Field id="work-minutes" label="Work Minutes" type="number" min="0" value={form.workMinutes} onChange={value => update('workMinutes', value)} placeholder="Optional" />
                     <Field id="start-time" label="Start Time" type="datetime-local" value={form.startTime} onChange={value => update('startTime', value)} />
