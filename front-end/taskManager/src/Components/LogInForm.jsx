@@ -32,6 +32,7 @@ function LogInForm() {
                 accountID: accountID.trim(),
                 hashedPassword: password,
             });
+
             const profile = await api.get('/api/accounts/profile', {
                 headers: { Authorization: `Bearer ${tokens.accessToken}` },
             });
