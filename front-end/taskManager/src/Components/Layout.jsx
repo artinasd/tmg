@@ -42,17 +42,11 @@ function Layout() {
         navigate('/log-in', { replace: true });
     }
 
-    function changeRole() {
-        dispatch(activeRoleActions.clearActiveRole());
-        setMobileMenuOpen(false);
-        navigate('/select-role');
-    }
-
     const navigation = [
         { key: 'dashboard', title: 'Dashboard', icon: <DashboardOutlinedIcon />, path: '/home/dashboard' },
         { key: 'profile', title: 'Profile', icon: <AccountCircleOutlinedIcon />, path: '/home/profile' },
         { key: 'tasks', title: 'Tasks', icon: <TaskOutlinedIcon />, path: '/home/tasks' },
-        { key: 'organizations', title: 'Role and Organizations', icon: <BusinessOutlinedIcon />, path: '/home/organizations' },
+        { key: 'organizations', title: 'Role & Organizations', icon: <BusinessOutlinedIcon />, path: '/home/organizations' },
     ];
 
     const sidebar = (
@@ -87,40 +81,25 @@ function Layout() {
             <aside className="hidden md:block md:w-64 lg:w-72 shrink-0 h-screen sticky top-0" aria-label="Sidebar navigation">{sidebar}</aside>
             {mobileMenuOpen && (
                 <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Mobile navigation">
-                    <button
-                        type="button"
-                        aria-label="Close navigation"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="absolute inset-0 bg-black/50"
-                    />
+                    <button type="button" aria-label="Close navigation" onClick={() => setMobileMenuOpen(false)} className="absolute inset-0 bg-black/50" />
                     <aside className="relative z-10 w-72 max-w-[85vw] h-full">{sidebar}</aside>
                 </div>
             )}
             <main className="flex-1 min-w-0 min-h-screen overflow-y-auto">
                 <div className="md:hidden sticky top-0 z-30 bg2 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
-                    <button
-                        type="button"
-                        aria-label="Open navigation"
-                        aria-expanded={mobileMenuOpen}
-                        onClick={() => setMobileMenuOpen(true)}
-                        className="p-2 rounded-md hover:bg-gray-700"
-                    >
-                        <MenuOutlinedIcon aria-hidden="true" />
-                    </button>
-                    <div className="flex items-center gap-2 font-bold" aria-label="TaskManager">
-                        <PlaylistAddCheckRoundedIcon aria-hidden="true" style={{ color: '#818cf8' }} />TaskManager
-                    </div>
+                    <button type="button" aria-label="Open navigation" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen(true)} className="p-2 rounded-md hover:bg-gray-700"><MenuOutlinedIcon aria-hidden="true" /></button>
+                    <div className="flex items-center gap-2 font-bold" aria-label="TaskManager"><PlaylistAddCheckRoundedIcon aria-hidden="true" style={{ color: '#818cf8' }} />TaskManager</div>
                     <div className="w-10" aria-hidden="true" />
                 </div>
                 <div className="border-b border-gray-700 bg2 px-4 sm:px-6 lg:px-10 py-3 flex justify-end">
                     <button
                         type="button"
-                        onClick={changeRole}
+                        onClick={() => navigateTo('/home/organizations')}
                         className="inline-flex max-w-full items-center gap-2 px-3 py-2 rounded-lg border border-gray-600 hover:border-indigo-400 hover:bg-gray-700/40 transition text-sm"
-                        aria-label={`Change active role, currently ${activeRole.roleName} at ${activeRole.organizationName}`}
+                        aria-label={`Open role and organizations, currently ${activeRole.roleName} at ${activeRole.organizationName}`}
                     >
                         <SwapHorizOutlinedIcon aria-hidden="true" style={{ fontSize: '18px' }} />
-                        <span className="shrink-0">Change Role</span>
+                        <span className="shrink-0">Role & Organizations</span>
                         <span className="text2 truncate hidden sm:inline">· {activeRole.roleName} — {activeRole.organizationName}</span>
                     </button>
                 </div>
