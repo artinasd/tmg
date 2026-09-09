@@ -10,30 +10,37 @@ import { activeRoleActions } from '../Redux/ActiveRoleSlice.js';
 function extractRoleName(value) {
     if (!value) return '';
     if (typeof value === 'object') {
-        return value?.role?.name || value?.roleName || value?.name || '';
+        return value?.role?.name || value?.role?.roleName || value?.roleName || value?.name || '';
     }
 
     const match = String(value).match(/role=RoleDTO\(name=([^,)]+)/);
     return match?.[1]?.trim() || '';
 }
 
-function normalizeRoles(payload) {
+function normalizeRoleItem(employment, organization, index) {
+    const roleName = extractRoleName(employment);
+    const organizationCode = organization?.orgCode || organization?.organizationCode || '';
+    const organizationName = organization?.title || organization?.name || organizationCode || 'Organization';
+    if (!roleName) return null;
+
+    return {
+        id: `${roleName}-${organizationCode || index}`,
+        roleName,
+        organizationName,
+        organizationCode,
+        employment,
+        organization,
+        permissions: employment?.role?.permissions || employment?.permissions || [],
+    };
+}
+
+export function normalizeRoles(payload) {
     if (Array.isArray(payload)) {
-        return payload
-            .map((item, index) => {
-                const employment = item?.employment || item;
-                const organization = item?.organization || item?.org || {};
-                const roleName = extractRoleName(employment);
-                return roleName ? {
-                    id: `${roleName}-${organization?.orgCode || index}`,
-                    roleName,
-                    organizationName: organization?.title || organization?.name || 'Organization',
-                    organizationCode: organization?.orgCode || '',
-                    employment,
-                    organization,
-                } : null;
-            })
-            .filter(Boolean);
+        return payload.map((item, index) => normalizeRoleItem(
+            item?.employment || item,
+            item?.organization || item?.org || {},
+            index,
+        )).filter(Boolean);
     }
 
     if (!payload || typeof payload !== 'object') return [];
@@ -44,18 +51,9 @@ function normalizeRoles(payload) {
             try {
                 employment = JSON.parse(employmentKey);
             } catch {
-                // The backend currently serializes PublicEmploymentDTO map keys as strings.
+                // The backend currently serializes PublicEmploymentDTO map keys using toString().
             }
-
-            const roleName = extractRoleName(employment);
-            return roleName ? {
-                id: `${roleName}-${organization?.orgCode || index}`,
-                roleName,
-                organizationName: organization?.title || organization?.name || 'Organization',
-                organizationCode: organization?.orgCode || '',
-                employment,
-                organization,
-            } : null;
+            return normalizeRoleItem(employment, organization, index);
         })
         .filter(Boolean);
 }
@@ -81,12 +79,12 @@ function RoleSelection() {
         setSelected('');
         try {
             const encodedAccountCode = encodeURIComponent(accountCode);
+            // The backend currently declares accountCode as an unannotated request parameter,
+            // so keep both the path and query value to match its actual contract.
             const response = await api.get(`/api/accounts/${encodedAccountCode}/roles?accountCode=${encodedAccountCode}`);
             const resolved = normalizeRoles(response);
             setRoles(resolved);
-            if (resolved.length === 0) {
-                setError('No organization roles are available for this account.');
-            }
+            if (resolved.length === 0) setError('No organization roles are available for this account.');
         } catch (err) {
             setRoles([]);
             setError(err instanceof ApiError ? err.message : 'Unable to load your roles.');
@@ -107,7 +105,9 @@ function RoleSelection() {
             roleName: role.roleName,
             organizationName: role.organizationName,
             organizationCode: role.organizationCode,
+            organization: role.organization,
             employment: role.employment,
+            permissions: role.permissions,
         }));
         navigate('/home/dashboard', { replace: true });
     }
