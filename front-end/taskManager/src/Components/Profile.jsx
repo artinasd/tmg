@@ -7,7 +7,6 @@ import TextArea from './Costume UI Components/TextArea.jsx';
 import { useState } from 'react';
 import { api, ApiError } from '../services/api.js';
 import { loggedUserActions } from '../Redux/LoggedUserSlice.js';
-import { activeRoleActions } from '../Redux/ActiveRoleSlice.js';
 import { useNavigate } from 'react-router-dom';
 
 function Profile() {
