@@ -25,24 +25,18 @@ function Profile() {
     const resetChanges = () => { setEditedFields({}); setError(''); setSuccess(''); };
 
     async function handleSave() {
-        if (Object.keys(editedFields).length === 0) {
-            setSuccess('There are no changes to save.'); setError(''); return;
-        }
+        if (Object.keys(editedFields).length === 0) { setSuccess('There are no changes to save.'); setError(''); return; }
         setIsSaving(true); setError(''); setSuccess('');
         try {
             const updated = await api.patch('/api/accounts/edit', editedFields);
             const updatedUser = updated && typeof updated === 'object' ? updated : { ...reduxUserInformation, ...editedFields };
             dispatch(loggedUserActions.setLoggedUser({ ...loggedUser, userInfo: updatedUser }));
             setEditedFields({}); setSuccess('Profile updated successfully.');
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Unable to update your profile.');
-        } finally { setIsSaving(false); }
+        } catch (err) { setError(err instanceof ApiError ? err.message : 'Unable to update your profile.'); }
+        finally { setIsSaving(false); }
     }
 
-    function changeRole() {
-        dispatch(activeRoleActions.clearActiveRole());
-        navigate('/select-role');
-    }
+    function changeRole() { navigate('/home/organizations'); }
 
     return (
         <div>
@@ -63,18 +57,21 @@ function Profile() {
                 </div>
             </div>
 
-            <div className="bg2 p-5 rounded-lg mt-6 border border-indigo-500/20">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <section className="bg2 p-5 rounded-lg mt-6 border border-indigo-500/20" aria-labelledby="active-role-title">
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
                     <div className="flex items-start gap-4">
                         <div className="w-12 h-12 rounded-xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center shrink-0"><BadgeOutlinedIcon /></div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text2">Current account role</p>
-                            {activeRole ? <><h3 className="text-xl font-semibold mt-1">{activeRole.roleName}</h3><p className="text2 mt-1">Applies to this account independently of organization membership.</p></> : <p className="text2 mt-2">No active role selected.</p>}
+                            <p className="text-xs uppercase tracking-wider text2">Active role & organization</p>
+                            <h3 id="active-role-title" className="text-xl font-semibold mt-1">{activeRole?.roleName || 'No active role'}</h3>
+                            <p className="text2 mt-1">{activeRole?.organizationName || 'No organization selected'}</p>
+                            {activeRole?.organizationCode && <p className="text2 text-xs font-mono mt-2">{activeRole.organizationCode}</p>}
                         </div>
                     </div>
-                    <button type="button" onClick={changeRole} className="px-4 py-2 rounded-lg theme hover:themeHover transition">Change Role</button>
+                    <button type="button" onClick={changeRole} className="px-4 py-2 rounded-lg theme hover:themeHover transition">Manage role & organizations</button>
                 </div>
-            </div>
+                <p className="text2 text-sm mt-5 pt-4 border-t border-gray-700">This is the role and organization context currently selected in the application.</p>
+            </section>
         </div>
     );
 }
