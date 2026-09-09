@@ -39,6 +39,7 @@ function TaskList() {
     const userInfo = useSelector(state => state.loggedUser.userInfo);
     const activeRole = useSelector(state => state.activeRole);
     const accountCode = getAccountCode(userInfo);
+    const activeOrganizationCode = activeRole?.organizationCode || '';
     const [tasks, setTasks] = useState([]);
     const [status, setStatus] = useState('ALL');
     const [query, setQuery] = useState('');
@@ -69,7 +70,7 @@ function TaskList() {
         } finally {
             setLoading(false);
         }
-    }, [accountCode, status]);
+    }, [accountCode, status, activeOrganizationCode]);
 
     useEffect(() => {
         loadTasks();
@@ -78,7 +79,7 @@ function TaskList() {
     useEffect(() => {
         setTasks([]);
         setError(null);
-    }, [accountCode, activeRole?.organizationCode]);
+    }, [accountCode, activeOrganizationCode]);
 
     const visibleTasks = useMemo(() => {
         const normalizedQuery = query.trim().toLowerCase();
