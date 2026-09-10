@@ -8,15 +8,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class TaskStatusMapper {
 
-    @Autowired
-    private TaskStatusTypeMapper typeMapper;
-
     public TaskStatusDTO toDTO(TaskStatus taskStatus){
         TaskStatusDTO dto = new TaskStatusDTO();
 
         if (taskStatus.getTime() != null) dto.setTime(taskStatus.getTime());
         if (taskStatus.getTaskCode() != null) dto.setTaskCode(taskStatus.getTaskCode());
-        if (taskStatus.getTaskStatusType() != null) dto.setTaskStatusType(typeMapper.toDTO(taskStatus.getTaskStatusType()));
+        if (taskStatus.getTaskStatusType() != null) dto.setTaskStatusType(taskStatus.getTaskStatusType());
 
         return dto;
     }
@@ -26,7 +23,7 @@ public class TaskStatusMapper {
 
         if (dto.getTime() != null) taskStatus.setTime(dto.getTime());
         if (dto.getTaskCode() != null) taskStatus.setTaskCode(dto.getTaskCode());
-        if (dto.getTaskStatusType() != null) taskStatus.setTaskStatusType(typeMapper.toEntity(dto.getTaskStatusType()));
+        if (dto.getTaskStatusType() != null) taskStatus.setTaskStatusType(dto.getTaskStatusType());
 
         return taskStatus;
     }

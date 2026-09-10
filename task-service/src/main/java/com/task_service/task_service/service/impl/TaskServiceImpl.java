@@ -47,7 +47,6 @@ public class TaskServiceImpl implements TaskService {
     private final AccountRepository accountRepository;
     private final UnitRepository unitRepository;
     private final TaskStatusRepository statusRepository;
-    private final TaskStatusTypeRepository statusTypeRepository;
     private final TaskStatusService taskStatusService;
     private final RescheduleService rescheduleService;
     private final TaskStatusMapper taskStatusMapper;
@@ -182,9 +181,9 @@ public class TaskServiceImpl implements TaskService {
         cq.where(cb.and(predicates.toArray(new Predicate[0])));
 
         return entityManager.createQuery(cq).getResultList()
-            .stream()
-            .map(mapper::transferEntityToPublic)
-            .collect(Collectors.toList());
+                .stream()
+                .map(mapper::transferEntityToPublic)
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -22,7 +22,5 @@ public class TaskStatus {
     @Column(nullable = false)
     private String taskCode;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
     private TaskStatusType taskStatusType;
 }

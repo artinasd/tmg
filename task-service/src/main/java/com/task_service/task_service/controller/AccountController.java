@@ -60,7 +60,7 @@ public class AccountController {
     }
 
     @GetMapping("{accountCode}/roles")
-    public ResponseEntity<Map<PublicEmploymentDTO, PublicOrganizationDTO>> getRoles(String accountCode){
+    public ResponseEntity<Map<PublicEmploymentDTO, PublicOrganizationDTO>> getRoles(@PathVariable String accountCode){
         return new ResponseEntity<>(service.getRoles(accountCode), HttpStatus.OK);
     }
 
