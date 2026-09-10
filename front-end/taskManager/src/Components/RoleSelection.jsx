@@ -84,6 +84,14 @@ function RoleSelection() {
             const response = await api.get(`/api/accounts/${encodedAccountCode}/roles?accountCode=${encodedAccountCode}`);
             const resolved = normalizeRoles(response);
             setRoles(resolved);
+
+            // An account can legitimately have no roles yet. In that case the backend returns
+            // an empty object and the user must not be blocked by the role-selection screen.
+            if (resolved.length === 0 && response && typeof response === 'object' && !Array.isArray(response) && Object.keys(response).length === 0) {
+                navigate('/home/dashboard', { replace: true });
+                return;
+            }
+
             if (resolved.length === 0) setError('No organization roles are available for this account.');
         } catch (err) {
             setRoles([]);
