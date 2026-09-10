@@ -24,8 +24,7 @@ function Layout() {
 
     useEffect(() => {
         if (!reduxIsLogged) navigate('/log-in', { replace: true });
-        else if (!activeRole && location.pathname !== '/select-role') navigate('/select-role', { replace: true });
-    }, [reduxIsLogged, activeRole, navigate, location.pathname]);
+    }, [reduxIsLogged, navigate]);
 
     const currentSection = location.pathname.split('/')[2] || 'dashboard';
 
@@ -74,7 +73,7 @@ function Layout() {
         </div>
     );
 
-    if (!reduxIsLogged || !activeRole) return null;
+    if (!reduxIsLogged) return null;
 
     return (
         <div className="bg1 flex min-h-screen max-w-screen">
@@ -91,18 +90,20 @@ function Layout() {
                     <div className="flex items-center gap-2 font-bold" aria-label="TaskManager"><PlaylistAddCheckRoundedIcon aria-hidden="true" style={{ color: '#818cf8' }} />TaskManager</div>
                     <div className="w-10" aria-hidden="true" />
                 </div>
-                <div className="border-b border-gray-700 bg2 px-4 sm:px-6 lg:px-10 py-3 flex justify-end">
-                    <button
-                        type="button"
-                        onClick={() => navigateTo('/home/organizations')}
-                        className="inline-flex max-w-full items-center gap-2 px-3 py-2 rounded-lg border border-gray-600 hover:border-indigo-400 hover:bg-gray-700/40 transition text-sm"
-                        aria-label={`Open role and organizations, currently ${activeRole.roleName} at ${activeRole.organizationName}`}
-                    >
-                        <SwapHorizOutlinedIcon aria-hidden="true" style={{ fontSize: '18px' }} />
-                        <span className="shrink-0">Role & Organizations</span>
-                        <span className="text2 truncate hidden sm:inline">· {activeRole.roleName} — {activeRole.organizationName}</span>
-                    </button>
-                </div>
+                {activeRole && (
+                    <div className="border-b border-gray-700 bg2 px-4 sm:px-6 lg:px-10 py-3 flex justify-end">
+                        <button
+                            type="button"
+                            onClick={() => navigateTo('/home/organizations')}
+                            className="inline-flex max-w-full items-center gap-2 px-3 py-2 rounded-lg border border-gray-600 hover:border-indigo-400 hover:bg-gray-700/40 transition text-sm"
+                            aria-label={`Open role and organizations, currently ${activeRole.roleName} at ${activeRole.organizationName}`}
+                        >
+                            <SwapHorizOutlinedIcon aria-hidden="true" style={{ fontSize: '18px' }} />
+                            <span className="shrink-0">Role & Organizations</span>
+                            <span className="text2 truncate hidden sm:inline">· {activeRole.roleName} — {activeRole.organizationName}</span>
+                        </button>
+                    </div>
+                )}
                 <div className="py-8 sm:py-10 px-4 sm:px-6 lg:px-10"><Outlet /></div>
             </main>
         </div>
