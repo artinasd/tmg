@@ -25,7 +25,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +46,7 @@ public class TaskServiceImpl implements TaskService {
     private final AccountRepository accountRepository;
     private final UnitRepository unitRepository;
     private final TaskStatusRepository statusRepository;
+    private final TaskStatusTypeRepository typeRepository;
     private final TaskStatusService taskStatusService;
     private final RescheduleService rescheduleService;
     private final TaskStatusMapper taskStatusMapper;
@@ -90,7 +90,8 @@ public class TaskServiceImpl implements TaskService {
         TaskStatusDTO statusDTO = new TaskStatusDTO();
         statusDTO.setTime(LocalDateTime.now());
         statusDTO.setTaskCode(taskCode);
-        statusDTO.setTaskStatusType(TaskStatusType.CREATED);
+        TaskStatusType type = typeRepository.findByType("CREATED");
+        statusDTO.setTaskStatusType(type);
         taskStatusService.createTaskStatus(statusDTO);
         task.setTaskStatus(statusRepository.findByTaskCode(taskCode));
 
@@ -181,9 +182,9 @@ public class TaskServiceImpl implements TaskService {
         cq.where(cb.and(predicates.toArray(new Predicate[0])));
 
         return entityManager.createQuery(cq).getResultList()
-                .stream()
-                .map(mapper::transferEntityToPublic)
-                .collect(Collectors.toList());
+            .stream()
+            .map(mapper::transferEntityToPublic)
+            .collect(Collectors.toList());
     }
 
     @Override

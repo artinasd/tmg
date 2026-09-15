@@ -3,7 +3,9 @@ package com.task_service.task_service.controller;
 import com.task_service.task_service.dto.PublicTaskDTO;
 import com.task_service.task_service.dto.TaskDTO;
 import com.task_service.task_service.dto.TaskStatusDTO;
+import com.task_service.task_service.entity.TaskStatusType;
 import com.task_service.task_service.service.TaskService;
+import jakarta.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +35,7 @@ public class TaskController {
 
     @GetMapping("account/{accountCode}")
     public ResponseEntity<List<PublicTaskDTO>> getAccountTasks(@PathVariable String accountCode,
-                                                         @RequestParam String status){
+                                                               @RequestParam(required = false) String status){
         return new ResponseEntity<>(taskService.getTasksByAccountCode(accountCode, status), HttpStatus.OK);
     }
 

@@ -1,6 +1,7 @@
 package com.task_service.task_service.service;
 
 import com.task_service.task_service.dto.*;
+import com.task_service.task_service.entity.TaskStatusType;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
