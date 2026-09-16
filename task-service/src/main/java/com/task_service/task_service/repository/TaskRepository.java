@@ -17,13 +17,13 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findSiblingsByParentTask(@Param("parentTask") String parentTask, @Param("taskCode") String exclude);
 
     @Query(value = """ 
-            SELECT t FROM task t
-            JOIN t.responsible r
-            JOIN r.employee e
-            JOIN e.account a
-            JOIN t.taskStatus ts
-            JOIN ts.taskStatusType tst
-            WHERE a.accountCode = :accountCode AND tst.type = :type
+            SELECT * FROM task t
+            JOIN employment e on t.responsible_id = e.id
+            join employee emp on e.employee_id = emp.id
+            join account a on emp.account_id = a.id
+            join task_status ts on t.task_status_id = ts.id
+            join task_status_type tst on ts.task_status_type_id = tst.id
+            where a.account_code = :accountCode and tst."type" = :type
             """, nativeQuery = true)
     List<Task> findAccountsTasks(@Param("accountCode") String accountCode, @Param("type") String status);
 }
