@@ -9,9 +9,7 @@ import { activeRoleActions } from '../Redux/ActiveRoleSlice.js';
 
 function extractField(value, fieldName) {
     if (!value) return '';
-    if (typeof value === 'object') {
-        return value?.[fieldName] || '';
-    }
+    if (typeof value === 'object') return value?.[fieldName] || '';
 
     const escapedField = fieldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const match = String(value).match(new RegExp(`${escapedField}=([^,)]*)`));
@@ -34,7 +32,7 @@ function extractUnitName(employment) {
         return employment?.unit?.unitName || employment?.unitName || '';
     }
 
-    const match = String(employment).match(/unit=PublicUnitDTO\([^)]*unitName=([^,)]+)/);
+    const match = String(employment).match(/unit=PublicUnitDTO\(unitCode=[^,]+, unitName=([^,)]*)/);
     return match?.[1]?.trim() || '';
 }
 
@@ -44,11 +42,13 @@ function normalizeRoleItem(employment, organization, index) {
     const organizationCode = organization?.orgCode || organization?.organizationCode || extractField(organization, 'orgCode');
     const organizationTitle = organization?.title || extractField(organization, 'title') || organizationCode || 'Organization';
 
-    if (!roleName) return null;
+    // A valid employment/organization entry is still selectable when role is null.
+    // The backend response can contain an employment without an assigned role yet.
+    if (!employment || !organization) return null;
 
     return {
-        id: `${roleName}-${unitName}-${organizationCode || index}`,
-        roleName,
+        id: `${roleName || 'no-role'}-${unitName || 'no-unit'}-${organizationCode || index}`,
+        roleName: roleName || 'No role assigned',
         unitName: unitName || 'Unit not assigned',
         organizationTitle,
         organizationCode,
