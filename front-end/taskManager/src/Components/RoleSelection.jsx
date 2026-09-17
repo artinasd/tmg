@@ -7,26 +7,50 @@ import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import { api, ApiError } from '../services/api.js';
 import { activeRoleActions } from '../Redux/ActiveRoleSlice.js';
 
-function extractRoleName(value) {
+function extractField(value, fieldName) {
     if (!value) return '';
     if (typeof value === 'object') {
-        return value?.role?.name || value?.role?.roleName || value?.roleName || value?.name || '';
+        return value?.[fieldName] || '';
     }
 
-    const match = String(value).match(/role=RoleDTO\(name=([^,)]+)/);
+    const escapedField = fieldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const match = String(value).match(new RegExp(`${escapedField}=([^,)]*)`));
+    return match?.[1]?.trim() || '';
+}
+
+function extractRoleName(employment) {
+    if (!employment) return '';
+    if (typeof employment === 'object') {
+        return employment?.role?.name || employment?.role?.roleName || employment?.roleName || '';
+    }
+
+    const match = String(employment).match(/role=RoleDTO\(name=([^,)]+)/);
+    return match?.[1]?.trim() || '';
+}
+
+function extractUnitName(employment) {
+    if (!employment) return '';
+    if (typeof employment === 'object') {
+        return employment?.unit?.unitName || employment?.unitName || '';
+    }
+
+    const match = String(employment).match(/unit=PublicUnitDTO\([^)]*unitName=([^,)]+)/);
     return match?.[1]?.trim() || '';
 }
 
 function normalizeRoleItem(employment, organization, index) {
     const roleName = extractRoleName(employment);
-    const organizationCode = organization?.orgCode || organization?.organizationCode || '';
-    const organizationName = organization?.title || organization?.name || organizationCode || 'Organization';
+    const unitName = extractUnitName(employment);
+    const organizationCode = organization?.orgCode || organization?.organizationCode || extractField(organization, 'orgCode');
+    const organizationTitle = organization?.title || extractField(organization, 'title') || organizationCode || 'Organization';
+
     if (!roleName) return null;
 
     return {
-        id: `${roleName}-${organizationCode || index}`,
+        id: `${roleName}-${unitName}-${organizationCode || index}`,
         roleName,
-        organizationName,
+        unitName: unitName || 'Unit not assigned',
+        organizationTitle,
         organizationCode,
         employment,
         organization,
@@ -51,7 +75,8 @@ export function normalizeRoles(payload) {
             try {
                 employment = JSON.parse(employmentKey);
             } catch {
-                // The backend currently serializes PublicEmploymentDTO map keys using toString().
+                // PublicEmploymentDTO is currently used as a Map key, so Jackson serializes
+                // the key using its toString() representation rather than a JSON object.
             }
             return normalizeRoleItem(employment, organization, index);
         })
@@ -79,14 +104,10 @@ function RoleSelection() {
         setSelected('');
         try {
             const encodedAccountCode = encodeURIComponent(accountCode);
-            // The backend currently declares accountCode as an unannotated request parameter,
-            // so keep both the path and query value to match its actual contract.
             const response = await api.get(`/api/accounts/${encodedAccountCode}/roles?accountCode=${encodedAccountCode}`);
             const resolved = normalizeRoles(response);
             setRoles(resolved);
 
-            // An account can legitimately have no roles yet. In that case the backend returns
-            // an empty object and the user must not be blocked by the role-selection screen.
             if (resolved.length === 0 && response && typeof response === 'object' && !Array.isArray(response) && Object.keys(response).length === 0) {
                 navigate('/home/dashboard', { replace: true });
                 return;
@@ -111,7 +132,9 @@ function RoleSelection() {
 
         dispatch(activeRoleActions.setActiveRole({
             roleName: role.roleName,
-            organizationName: role.organizationName,
+            unitName: role.unitName,
+            organizationName: role.organizationTitle,
+            organizationTitle: role.organizationTitle,
             organizationCode: role.organizationCode,
             organization: role.organization,
             employment: role.employment,
@@ -144,13 +167,23 @@ function RoleSelection() {
                     <div className="space-y-3" role="radiogroup" aria-label="Available roles">
                         {roles.map(role => (
                             <button key={role.id} type="button" role="radio" aria-checked={selected === role.id} onClick={() => setSelected(role.id)} className={`w-full text-left bg2 rounded-xl border p-5 transition ${selected === role.id ? 'border-indigo-400 ring-2 ring-indigo-400/30' : 'border-gray-700 hover:border-gray-500'}`}>
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-start gap-4">
                                     <div className="w-12 h-12 rounded-xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center shrink-0"><BadgeOutlinedIcon aria-hidden="true" /></div>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="font-semibold text-lg truncate">{role.roleName}</p>
-                                        <p className="text2 text-sm mt-1 truncate">{role.organizationName}</p>
+                                    <div className="min-w-0 flex-1 space-y-2">
+                                        <div>
+                                            <p className="text-xs uppercase tracking-wide text2">Role</p>
+                                            <p className="font-semibold text-lg truncate">{role.roleName}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs uppercase tracking-wide text2">Unit</p>
+                                            <p className="font-medium truncate">{role.unitName}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs uppercase tracking-wide text2">Organization</p>
+                                            <p className="font-medium truncate">{role.organizationTitle}</p>
+                                        </div>
                                     </div>
-                                    <span aria-hidden="true" className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected === role.id ? 'border-indigo-400' : 'border-gray-500'}`}>
+                                    <span aria-hidden="true" className={`w-5 h-5 mt-1 rounded-full border-2 flex items-center justify-center shrink-0 ${selected === role.id ? 'border-indigo-400' : 'border-gray-500'}`}>
                                         {selected === role.id && <span className="w-2.5 h-2.5 rounded-full bg-indigo-400" />}
                                     </span>
                                 </div>
