@@ -85,15 +85,14 @@ function UnitAddMembers() {
         setSuccess('');
 
         try {
-            // The backend add-member flow accepts EmploymentDTO data. The selected role
-            // is sent as roleDTO.name (serialized as role.name) and must be a string.
-            const payload = selectedEntries.map(([accountCode, roleName]) => ({
-                employee: {
-                    account: { accountCode },
-                    orgCode,
-                },
-                unit: { unitCode },
-                role: { name: roleName },
+            // The current add-member endpoint accepts PublicEmployeeDTO objects.
+            // Its employee account must be at the top level; sending an EmploymentDTO
+            // wrapper makes employee.account null on the backend and causes a 500.
+            // Role selection is kept in the UI until the backend endpoint accepts
+            // EmploymentDTO/role data.
+            const payload = selectedEntries.map(([accountCode]) => ({
+                account: { accountCode },
+                orgCode,
             }));
 
             await api.post(`/api/units/${encodeURIComponent(unitCode)}/addEmployee`, payload);
