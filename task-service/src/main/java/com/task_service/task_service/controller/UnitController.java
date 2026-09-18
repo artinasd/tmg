@@ -24,10 +24,9 @@ public class UnitController {
         return new ResponseEntity<>(service.createUnit(unitDTO), HttpStatus.CREATED);
     }
 
-    @PostMapping("{unitCode}/addEmployee")
-    public ResponseEntity<List<PublicEmploymentDTO>> addEmployee(@PathVariable String unitCode,
-                                                                 @RequestBody List<PublicEmployeeDTO> employees) throws AccessDeniedException {
-        return new ResponseEntity<>(service.addEmployee(unitCode,employees), HttpStatus.OK);
+    @PostMapping("addEmployee")
+    public ResponseEntity<List<PublicEmploymentDTO>> addEmployee(@RequestBody List<PublicEmploymentDTO> employments) throws AccessDeniedException {
+        return new ResponseEntity<>(service.addEmployee(employments), HttpStatus.OK);
     }
 
     @GetMapping("{unitCode}")
@@ -69,7 +68,6 @@ public class UnitController {
         return new ResponseEntity<>("Unit deleted successfully!", HttpStatus.OK);
     }
 }
-
 
 
 

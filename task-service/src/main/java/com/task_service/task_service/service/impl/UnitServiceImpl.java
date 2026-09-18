@@ -56,6 +56,8 @@ public class UnitServiceImpl implements UnitService {
     @Autowired
     private EmploymentMapper employmentMapper;
     @Autowired
+    private RoleMapper roleMapper;
+    @Autowired
     private AuthorizationManager authorizationManager;
 
     @PersistenceContext
@@ -183,23 +185,29 @@ public class UnitServiceImpl implements UnitService {
 
     @org.springframework.transaction.annotation.Transactional
     @Override
-    public List<PublicEmploymentDTO> addEmployee(String unitCode, List<PublicEmployeeDTO> employees) throws AccessDeniedException {
+    public List<PublicEmploymentDTO> addEmployee(List<PublicEmploymentDTO> employments) throws AccessDeniedException {
+        String unitCode = null;
+        if (employments.isEmpty())
+            throw new RuntimeException("The list is empty!");
+        else
+            unitCode = employments.get(0).getUnit().getUnitCode();
+
         Unit unit = repository.findByUnitCode(unitCode);
         if (unit == null)
             throw new EntityNotFound("Unit", "UnitCode", unitCode);
 
         List<Employment> employmentList = unit.getEmployees();
 
-        for (PublicEmployeeDTO employee : employees){
+        for (PublicEmploymentDTO employment : employments){
             EmploymentDTO employmentDTO = new EmploymentDTO();
             employmentDTO.setEmployee(employeeMapper.toDTO(
                     employeeRepository.findByAccount_AccountCodeAndOrganization_OrgCode(
-                            employee.getAccount().getAccountCode(),
+                            employment.getEmployee().getAccount().getAccountCode(),
                             unit.getOrganization().getOrgCode()
                     )
             ));
             employmentDTO.setUnit(mapper.toDTO(repository.findByUnitCode(unitCode)));
-            // TODO: Set the Role
+            employmentDTO.setRole(roleMapper.toDTO(roleRepository.findByName(employment.getRole().getName())));
 
             employmentDTO = employmentService.createEmployment(employmentDTO);
 

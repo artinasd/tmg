@@ -24,5 +24,5 @@ public interface UnitService {
 
     void deleteUnit(String unitCode);
 
-    List<PublicEmploymentDTO> addEmployee(String unitCode, List<PublicEmployeeDTO> employees) throws AccessDeniedException;
+    List<PublicEmploymentDTO> addEmployee(List<PublicEmploymentDTO> employments) throws AccessDeniedException;
 }
