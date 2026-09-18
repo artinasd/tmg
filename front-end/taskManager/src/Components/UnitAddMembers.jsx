@@ -89,7 +89,6 @@ function UnitAddMembers() {
                     account: { accountCode },
                     orgCode,
                 },
-                unit: { unitCode },
                 role: { name: roleName },
             }));
 
