@@ -8,14 +8,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import SearchIcon from '@mui/icons-material/Search';
 import { api, ApiError } from '../services/api.js';
 
-// Temporary role names until the production team provides the final role catalogue.
-const READY_ROLES = [
-    'Employee',
-    'Manager',
-    'Supervisor',
-    'Team Lead',
-    'Administrator',
-];
+
 
 function UnitAddMembers() {
     const { orgCode, unitCode } = useParams();
@@ -23,6 +16,7 @@ function UnitAddMembers() {
     const [employees, setEmployees] = useState([]);
     const [existingCodes, setExistingCodes] = useState(new Set());
     const [selected, setSelected] = useState({});
+    const [roles, setRoles] = useState([]);
     const [query, setQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -36,13 +30,18 @@ function UnitAddMembers() {
             setLoading(true);
             setError('');
             try {
-                const [orgEmployees, unit] = await Promise.all([
+                const [orgEmployees, unit, availableRoles] = await Promise.all([
                     api.get(`/api/orgs/${encodeURIComponent(orgCode)}/employees`),
                     api.get(`/api/units/getDetails/${encodeURIComponent(unitCode)}`),
+                    api.get('/api/roles'),
                 ]);
                 if (!active) return;
+                const normalizedRoles = (Array.isArray(availableRoles) ? availableRoles : [])
+                    .map((role) => (typeof role === 'string' ? role : role?.name))
+                    .filter(Boolean);
                 setEmployees(orgEmployees || []);
                 setExistingCodes(new Set(unit?.employeeCodes || []));
+                setRoles(normalizedRoles);
             } catch (err) {
                 if (active) setError(err instanceof ApiError ? err.message : 'Unable to load available employees.');
             } finally {
@@ -68,7 +67,7 @@ function UnitAddMembers() {
                 delete next[code];
                 return next;
             }
-            return { ...current, [code]: READY_ROLES[0] };
+            return { ...current, [code]: roles[0] || '' };
         });
     };
 
@@ -85,14 +84,13 @@ function UnitAddMembers() {
         setSuccess('');
 
         try {
-            // The current add-member endpoint accepts PublicEmployeeDTO objects.
-            // Its employee account must be at the top level; sending an EmploymentDTO
-            // wrapper makes employee.account null on the backend and causes a 500.
-            // Role selection is kept in the UI until the backend endpoint accepts
-            // EmploymentDTO/role data.
-            const payload = selectedEntries.map(([accountCode]) => ({
-                account: { accountCode },
-                orgCode,
+            const payload = selectedEntries.map(([accountCode, roleName]) => ({
+                employee: {
+                    account: { accountCode },
+                    orgCode,
+                },
+                unit: { unitCode },
+                role: { name: roleName },
             }));
 
             await api.post(`/api/units/${encodeURIComponent(unitCode)}/addEmployee`, payload);
@@ -131,7 +129,12 @@ function UnitAddMembers() {
                 </div>
 
                 {loading ? (
-                    <div className="py-12 text-center text2">Loading available employees...</div>
+                    <div className="py-12 text-center text2">Loading available employees and roles...</div>
+                ) : roles.length === 0 ? (
+                    <div className="py-12 text-center">
+                        <p className="text-white font-medium">No roles are available.</p>
+                        <p className="text2 text-sm mt-1">Ask an administrator to configure roles before adding members.</p>
+                    </div>
                 ) : available.length === 0 ? (
                     <div className="py-12 text-center">
                         <p className="text-white font-medium">No available employees found.</p>
@@ -166,7 +169,7 @@ function UnitAddMembers() {
                                                 onChange={(event) => setRole(code, event.target.value)}
                                                 className="w-full rounded-lg bg-gray-800 border border-gray-600 px-3 py-2 text-white outline-none focus:border-blue-500"
                                             >
-                                                {READY_ROLES.map((roleName) => <option key={roleName} value={roleName}>{roleName}</option>)}
+                                                {roles.map((roleName) => <option key={roleName} value={roleName}>{roleName}</option>)}
                                             </select>
                                         </div>
                                     )}
