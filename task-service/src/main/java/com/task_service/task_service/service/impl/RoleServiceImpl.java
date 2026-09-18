@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class RoleServiceImpl implements RoleService {
 
@@ -50,5 +52,12 @@ public class RoleServiceImpl implements RoleService {
 
         repository.delete(role);
         return true;
+    }
+
+    @Override
+    public List<RoleDTO> getRoles() {
+        return repository.findAll().stream()
+                .map(mapper :: toDTO)
+                .toList();
     }
 }
