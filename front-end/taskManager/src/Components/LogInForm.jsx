@@ -53,7 +53,9 @@ function LogInForm() {
             }));
             dispatch(activeRoleActions.clearActiveRole());
             dispatch(IsLoggedUserActions.setIsLogged(true));
-            navigate('/select-role', { replace: true });
+            // Role selection remains implemented at /select-role for future use,
+            // but it is not forced during login for now.
+            navigate('/home/dashboard', { replace: true });
         } catch (loginError) {
             setError(loginError instanceof ApiError ? loginError.message : 'Unable to sign in. Please try again.');
         } finally {
