@@ -89,10 +89,11 @@ function UnitAddMembers() {
                     account: { accountCode },
                     orgCode,
                 },
+                unit: { unitCode },
                 role: { name: roleName },
             }));
 
-            await api.post(`/api/units/${encodeURIComponent(unitCode)}/addEmployee`, payload);
+            await api.post('/api/units/addEmployee', payload);
 
             setSuccess(`${selectedEntries.length} member${selectedEntries.length === 1 ? '' : 's'} added successfully.`);
             setSelected({});
