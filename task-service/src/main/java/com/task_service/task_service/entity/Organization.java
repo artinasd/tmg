@@ -1,10 +1,13 @@
 package com.task_service.task_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -43,7 +46,7 @@ public class Organization {
 
     @ManyToOne
     @JoinColumn
-    private Employee Boss;
+    private Employee boss;
 
     @OneToMany(mappedBy = "organization")
     private List<Unit> units;

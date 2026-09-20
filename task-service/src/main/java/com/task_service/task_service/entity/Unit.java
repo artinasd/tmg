@@ -1,5 +1,7 @@
 package com.task_service.task_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.task_service.task_service.dto.LTreeType;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -39,6 +41,7 @@ public class Unit {
 
     @ManyToOne
     @JoinColumn(nullable = false)
+    @JsonManagedReference
     private Employee boss;
 
     @ManyToOne
@@ -46,6 +49,7 @@ public class Unit {
     private Organization organization;
 
     @OneToMany(mappedBy = "unit", fetch = FetchType.EAGER)
+    @JsonBackReference
     private List<Employment> employees;
 
     @Type(LTreeType.class)

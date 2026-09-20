@@ -1,5 +1,6 @@
 package com.task_service.task_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -38,5 +39,6 @@ public class Employee {
     private Organization organization;
 
     @OneToMany(mappedBy = "employee")
+    @JsonBackReference
     private List<Employment> employments;
 }

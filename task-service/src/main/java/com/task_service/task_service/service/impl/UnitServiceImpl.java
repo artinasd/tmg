@@ -17,6 +17,8 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -62,6 +64,8 @@ public class UnitServiceImpl implements UnitService {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    private final Logger logger = LoggerFactory.getLogger(UnitServiceImpl.class);
 
     @Transactional
     @Override
@@ -207,12 +211,16 @@ public class UnitServiceImpl implements UnitService {
                     )
             ));
             employmentDTO.setUnit(mapper.toDTO(repository.findByUnitCode(unitCode)));
-            employmentDTO.setRole(roleMapper.toDTO(roleRepository.findByName(employment.getRole().getName())));
+            employmentDTO.setRole(employment.getRole());
+            logger.info("{}", employments);
 
             employmentDTO = employmentService.createEmployment(employmentDTO);
 
             employmentList.add(employmentMapper.toEntity(employmentDTO));
         }
+
+        repository.save(unit);
+        logger.info("{}", unit);
 
         return employmentList.stream()
                 .map(employmentMapper::transferEntityToPublic)

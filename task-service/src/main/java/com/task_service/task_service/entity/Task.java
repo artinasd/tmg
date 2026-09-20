@@ -1,5 +1,6 @@
 package com.task_service.task_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.task_service.task_service.dto.LTreeType;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -60,18 +61,22 @@ public class Task {
 
     @ManyToOne
     @JoinColumn(name = "owner_id")
+    @JsonManagedReference
     private Employment owner;
 
     @ManyToOne
     @JoinColumn(name = "responsible_id")
+    @JsonManagedReference
     private Employment responsible;
 
     @ManyToOne
     @JoinColumn(name = "unit_id")
+    @JsonManagedReference
     private Unit unit;
 
     @ManyToOne
     @JoinColumn(nullable = false)
+    @JsonManagedReference
     private TaskStatus taskStatus;
 
     @ElementCollection

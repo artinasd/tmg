@@ -15,6 +15,8 @@ import com.task_service.task_service.security.ActionType;
 import com.task_service.task_service.security.AuthorizationManager;
 import com.task_service.task_service.service.EmploymentService;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,6 +47,8 @@ public class EmploymentServiceImpl implements EmploymentService {
     @Autowired
     private AuthorizationManager authorizationManager;
 
+    private final Logger logger = LoggerFactory.getLogger(EmploymentServiceImpl.class);
+
     @Override
     @org.springframework.transaction.annotation.Transactional
     public EmploymentDTO createEmployment(EmploymentDTO employmentDTO) throws AccessDeniedException {
@@ -58,6 +62,8 @@ public class EmploymentServiceImpl implements EmploymentService {
 
         repository.save(employment);
 
+        logger.info("{}", employment);
+
         return mapper.toDTO(employment);
     }
 
@@ -65,7 +71,7 @@ public class EmploymentServiceImpl implements EmploymentService {
         employment.setUnit(unitRepository.findByUnitCode(employment.getUnit().getUnitCode())); // Setting Unit to employment
         employment.setEmployee(employeeRepository.findByAccount_AccountCodeAndOrganization_OrgCode(employment.getEmployee().getAccount().getAccountCode(), employment.getUnit().getOrganization().getOrgCode()));
         employment.setJoinTime(LocalDateTime.now());
-        // TODO : Set Role
+        employment.setRole(roleRepository.findByName(employment.getRole().getName()));
     }
 
     @Override

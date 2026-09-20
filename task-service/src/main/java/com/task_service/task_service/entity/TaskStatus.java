@@ -1,5 +1,6 @@
 package com.task_service.task_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,5 +25,6 @@ public class TaskStatus {
 
     @ManyToOne
     @JoinColumn(nullable = false)
+    @JsonManagedReference
     private TaskStatusType taskStatusType;
 }

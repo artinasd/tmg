@@ -1,8 +1,10 @@
 package com.task_service.task_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table
 @NoArgsConstructor
+@ToString(exclude = {"employee", "unit"})
 public class Employment {
 
     @Id
@@ -18,6 +21,7 @@ public class Employment {
 
     @ManyToOne
     @JoinColumn
+    @JsonManagedReference
     private Employee employee;
 
     @Column(nullable = false)
@@ -28,10 +32,12 @@ public class Employment {
 
     @ManyToOne
     @JoinColumn
-    private Role role; // TODO : change it to Org.Role
+    @JsonManagedReference
+    private Role role;
 
     @ManyToOne
     @JoinColumn(nullable = false)
+    @JsonManagedReference
     private Unit unit;
 
 }

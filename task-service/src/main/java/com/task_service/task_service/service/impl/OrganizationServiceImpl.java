@@ -14,6 +14,8 @@ import com.task_service.task_service.security.ActionType;
 import com.task_service.task_service.security.AuthorizationManager;
 import com.task_service.task_service.service.EmployeeService;
 import com.task_service.task_service.service.OrganizationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -47,6 +49,8 @@ public class OrganizationServiceImpl implements OrganizationService {
     private UnitMapper unitMapper;
     @Autowired
     private AuthorizationManager authorizationManager;
+
+    private final Logger logger = LoggerFactory.getLogger(OrganizationServiceImpl.class);
 
     @Override
     @Transactional

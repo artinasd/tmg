@@ -1,5 +1,6 @@
 package com.task_service.task_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,5 +32,6 @@ public class WorkTime {
 
     @ManyToOne
     @JoinColumn(nullable = false)
+    @JsonManagedReference
     private Task task;
 }
